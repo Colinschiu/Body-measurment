@@ -479,11 +479,23 @@
     }
 
     function clearAllData() {
-        if (confirm("⚠️ This will completely clear ALL saved physical measurements from this iPad. Proceed?")) {
+        // 1. Ask for a secret passcode
+        const passcode = prompt("🔒 Admin Access Required.\nPlease enter the passcode to clear memory:");
+        
+        // 2. Check if the passcode is correct (You can change "8888" to whatever you want)
+        if (passcode !== "8888") {
+            if (passcode !== null) { // If they typed something wrong (didn't just click cancel)
+                alert("❌ Incorrect passcode. Memory was NOT cleared.");
+            }
+            return; // Stop the function here
+        }
+
+        // 3. If passcode is correct, ask for final confirmation
+        if (confirm("⚠️ WARNING: This will completely clear ALL saved physical measurements from this iPad. Proceed?")) {
             studentsDatabase = [];
             localStorage.removeItem('savedMeasurements');
             updateRecordCount();
-            alert("Memory successfully cleared! You can start a fresh data entry session.");
+            alert("✅ Memory successfully cleared! You can start a fresh data entry session.");
         }
     }
 </script>
