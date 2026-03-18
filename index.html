@@ -21,7 +21,6 @@
             --border-color: #E5E7EB;
         }
 
-        /* Prevent iPad auto-zoom and adjust for touch */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-page); 
@@ -43,9 +42,21 @@
         
         .db-upload {
             background: #EFF6FF; padding: 15px; border-radius: 8px; border: 1px dashed var(--primary-light);
-            font-size: 14px; color: var(--primary); display: flex; align-items: center; gap: 10px;
+            font-size: 15px; color: var(--primary); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
         }
         
+        select.term-selector {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--primary-light);
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            outline: none;
+        }
+
         .card { background: #FFFFFF; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); padding: 24px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.05); }
         
         .header-card { 
@@ -61,7 +72,6 @@
         label { display: block; font-weight: 600; font-size: 17px; margin-bottom: 16px; color: var(--text-main); }
         .required { color: var(--danger); margin-left: 4px; }
 
-        /* ID Card */
         .id-card { background: linear-gradient(to right, #F0FDF4, #FFFFFF); border: 2px solid var(--success); padding: 24px; display: flex; align-items: center; transition: all 0.3s ease; }
         .id-card.empty { background: linear-gradient(to right, #F3F4F6, #FFFFFF); border: 2px dashed #D1D5DB; }
         .id-card .avatar { font-size: 45px; margin-right: 20px; }
@@ -73,7 +83,6 @@
         .input-wrapper { position: relative; }
         .input-wrapper::after { content: attr(data-unit); position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600; font-size: 16px; }
         
-        /* Larger inputs for iPad touch */
         input[type="number"] { 
             width: 100%; padding: 18px 50px 18px 20px; border: 2px solid var(--border-color); 
             border-radius: 12px; font-size: 18px; font-weight: 500; font-family: inherit; 
@@ -82,14 +91,12 @@
         input[type="number"]:invalid:not(:placeholder-shown) { border-color: var(--danger); background-color: #FEF2F2; }
         input[type="number"]:focus { outline: none; border-color: var(--primary-light); background-color: #fff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
 
-        /* Larger touch targets for radios */
         .radio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; }
         .radio-label { display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 16px; border: 2px solid var(--border-color); border-radius: 12px; font-weight: 600; font-size: 18px; transition: all 0.2s; background: #fff;}
         .radio-label:hover { border-color: var(--primary-light); background: #EFF6FF; }
-        .radio-label input { display: none; } /* Hide default radio for cleaner look */
+        .radio-label input { display: none; } 
         .radio-label:has(input:checked) { border-color: var(--primary); background-color: var(--primary); color: white; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);}
 
-        /* Larger class numbers for iPad */
         .number-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 12px; }
         .number-grid input[type="radio"] { display: none; }
         .number-box { display: flex; align-items: center; justify-content: center; height: 55px; background-color: #FFFFFF; border: 2px solid var(--border-color); border-radius: 12px; font-size: 18px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.15s ease-in-out; }
@@ -114,7 +121,7 @@
         <div class="admin-header">
             <div>
                 <h2>📊 PE Data Dashboard</h2>
-                <p>Database Status: <span id="dbStatus">❌ No Data Loaded</span></p>
+                <p>Database Status: <span id="dbStatus">⏳ Fetching data...</span></p>
                 <p style="margin-top: 5px;">Records entered: <span id="recordCount">0</span></p>
             </div>
             
@@ -125,8 +132,12 @@
         </div>
         
         <div class="db-upload" id="uploadSection">
-            <label for="excelUpload" style="margin-bottom: 0;"><strong>Upload Excel List:</strong></label>
-            <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" onchange="loadExcelDatabase(event)" style="font-size: 16px;">
+            <label style="margin-bottom: 0;"><strong>Active Database:</strong></label>
+            <select id="termSelector" class="term-selector" onchange="triggerDatabaseFetch()">
+                <option value="term1.csv">1st Term Class List</option>
+                <option value="term2.csv">2nd Term Class List</option>
+            </select>
+            <button type="button" onclick="triggerDatabaseFetch()" style="padding: 8px 12px; font-size: 14px; background: white; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">🔄 Refresh List</button>
         </div>
     </div>
 
@@ -165,8 +176,7 @@
         <div class="card">
             <div class="form-group">
                 <label>Student Class Number <span class="required">*</span> <span id="dynamicCountText" style="font-weight: 400; font-size: 14px; color: var(--text-muted);"></span></label>
-                <div class="number-grid" id="classNumberGrid">
-                    </div>
+                <div class="number-grid" id="classNumberGrid"></div>
             </div>
         </div>
 
@@ -205,93 +215,96 @@
 
 <script>
     let studentsDatabase = JSON.parse(localStorage.getItem('savedMeasurements')) || [];
-    let schoolNamesDatabase = JSON.parse(localStorage.getItem('schoolNamesDatabase')) || {};
+    let schoolNamesDatabase = {};
 
     window.onload = function() {
-        renderNumberGrid(40); // Default to 40 until a class is picked
+        renderNumberGrid(40); 
         updateRecordCount();
-
-        if (Object.keys(schoolNamesDatabase).length > 0) {
-            document.getElementById('dbStatus').innerText = "✅ Active (" + Object.keys(schoolNamesDatabase).length + " students)";
-        }
+        
+        // Auto-fetch data from Github on load!
+        triggerDatabaseFetch();
     };
 
-    function loadExcelDatabase(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    // 🌐 Automatically fetch the database from GitHub
+    async function triggerDatabaseFetch() {
+        const fileName = document.getElementById('termSelector').value;
+        document.getElementById('dbStatus').innerText = `⏳ Fetching ${fileName}...`;
+        document.getElementById('dbStatus').style.color = "var(--warning)";
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                
-                const newDb = {};
-                let clsIdx = -1, numIdx = -1, enIdx = -1, chIdx = -1;
-
-                for (let i = 0; i < rows.length; i++) {
-                    const cols = rows[i];
-                    if (!cols || cols.length === 0) continue;
-
-                    if (clsIdx === -1) {
-                        for(let j=0; j<cols.length; j++) {
-                            const val = String(cols[j] || '').trim().toUpperCase();
-                            if (val === 'CLS_NAME' || /^[1-6][A-D]$/.test(val)) {
-                                clsIdx = j;
-                                numIdx = j + 1; 
-                                enIdx = j + 2;  
-                                chIdx = j + 3;  
-                                break;
-                            }
-                        }
-                    }
-
-                    if (clsIdx !== -1 && cols.length > chIdx) {
-                        const clsName = String(cols[clsIdx] || '').trim().toUpperCase();
-                        const classNo = parseInt(String(cols[numIdx] || '').trim(), 10);
-                        const enName = String(cols[enIdx] || '').trim();
-                        const chName = String(cols[chIdx] || '').trim();
-                        
-                        if (/^[1-6][A-D]$/.test(clsName) && !isNaN(classNo)) {
-                            const lookupKey = clsName + '-' + classNo;
-                            newDb[lookupKey] = { en: enName, ch: chName };
-                        }
-                    }
-                }
-
-                if (Object.keys(newDb).length === 0) {
-                    alert("❌ Could not find student data. Make sure it's the correct Excel file.");
-                    return;
-                }
-
-                schoolNamesDatabase = newDb;
-                localStorage.setItem('schoolNamesDatabase', JSON.stringify(newDb));
-                
-                alert("Success! " + Object.keys(newDb).length + " student names loaded.");
-                document.getElementById('dbStatus').innerText = "✅ Active (" + Object.keys(newDb).length + " students)";
-                document.getElementById('excelUpload').value = ''; 
-                handleFormClassChange(); // Refresh grid based on new data
-
-            } catch (error) {
-                alert("Error reading Excel file. Please try again.");
-                console.error(error);
-            }
-        };
-        reader.readAsArrayBuffer(file);
+        try {
+            // Append a timestamp to prevent the iPad/browser from caching an old version
+            const cacheBuster = '?t=' + new Date().getTime();
+            const response = await fetch('./' + fileName + cacheBuster);
+            
+            if (!response.ok) throw new Error("File not found on server");
+            
+            const arrayBuffer = await response.arrayBuffer();
+            parseExcelData(arrayBuffer);
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            document.getElementById('dbStatus').innerText = "❌ Offline / File Not Found. Please check Github.";
+            document.getElementById('dbStatus').style.color = "var(--danger)";
+        }
     }
 
-    // New Function to dynamically render the exact amount of numbers for a class
+    function parseExcelData(arrayBuffer) {
+        try {
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+            
+            const newDb = {};
+            let clsIdx = -1, numIdx = -1, enIdx = -1, chIdx = -1;
+
+            // Dynamically map headers (fixes the 1st Term vs 2nd Term column order issue)
+            for (let i = 0; i < rows.length; i++) {
+                const cols = rows[i];
+                if (!cols || cols.length === 0) continue;
+
+                if (clsIdx === -1) {
+                    for(let j=0; j<cols.length; j++) {
+                        const val = String(cols[j] || '').trim().toUpperCase();
+                        if (val === 'CLS_NAME') clsIdx = j;
+                        if (val === 'CLASS_NO') numIdx = j;
+                        if (val === 'EN_NAME') enIdx = j;
+                        if (val === 'CH_NAME') chIdx = j;
+                    }
+                }
+
+                if (clsIdx !== -1 && numIdx !== -1 && enIdx !== -1) {
+                    const clsName = String(cols[clsIdx] || '').trim().toUpperCase();
+                    const classNo = parseInt(String(cols[numIdx] || '').trim(), 10);
+                    const enName = String(cols[enIdx] || '').trim();
+                    const chName = chIdx !== -1 ? String(cols[chIdx] || '').trim() : "";
+                    
+                    if (/^[1-6][A-D]$/.test(clsName) && !isNaN(classNo)) {
+                        const lookupKey = clsName + '-' + classNo;
+                        newDb[lookupKey] = { en: enName, ch: chName };
+                    }
+                }
+            }
+
+            schoolNamesDatabase = newDb;
+            
+            document.getElementById('dbStatus').innerText = "✅ Live Sync Active (" + Object.keys(newDb).length + " students)";
+            document.getElementById('dbStatus').style.color = "var(--success)";
+            handleFormClassChange(); 
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('dbStatus').innerText = "❌ Error parsing CSV file.";
+        }
+    }
+
     function handleFormClassChange() {
         const formObj = document.querySelector('input[name="formGrade"]:checked');
         const classObj = document.querySelector('input[name="studentClass"]:checked');
         
-        let maxStudents = 40; // Default fallback
+        let maxStudents = 40; 
 
-        // If Excel data exists and a specific class is selected, find the highest class number
         if (formObj && classObj && Object.keys(schoolNamesDatabase).length > 0) {
             const prefix = formObj.value + classObj.value + "-";
             maxStudents = 0;
@@ -302,20 +315,16 @@
                     if (num > maxStudents) maxStudents = num;
                 }
             }
-            
-            // If the class is missing in Excel, revert to 40
             if (maxStudents === 0) maxStudents = 40;
         }
 
         renderNumberGrid(maxStudents);
-        lookupStudent(); // Update the profile card in case numbers cleared
+        lookupStudent(); 
     }
 
     function renderNumberGrid(maxCount) {
         const grid = document.getElementById('classNumberGrid');
         const countText = document.getElementById('dynamicCountText');
-        
-        // Preserve currently selected number if it's within the new bounds
         const currentSelected = document.querySelector('input[name="classNumber"]:checked')?.value;
         
         grid.innerHTML = '';
@@ -348,7 +357,7 @@
             } else {
                 card.classList.remove('empty');
                 statusLabel.innerText = `⚠️ Missing Data: ${formObj.value}${classObj.value} No. ${numObj.value}`;
-                nameDisplay.innerText = "No student found in Excel for this number";
+                nameDisplay.innerText = "No student found in Server for this number";
                 nameDisplay.style.color = "#EF4444"; 
             }
         } else {
@@ -377,49 +386,24 @@
         const enName = student ? student.en : "Unknown Student";
         const chName = student ? student.ch : "";
 
-        // --- DUPLICATE & OVERWRITE CHECK ---
         const existingRecordIndex = studentsDatabase.findIndex(r => r.lookupKey === lookupKey);
         
         if (existingRecordIndex !== -1) {
             const existing = studentsDatabase[existingRecordIndex];
+            const confirmMsg = `⚠️ DATA ALREADY EXISTS! ⚠️\n\nStudent: ${enName} (${lookupKey})\n\n📁 PREVIOUSLY SAVED DATA:\nHeight: ${existing.height} cm\nWeight: ${existing.weight} kg\n\n🆕 YOUR NEW DATA:\nHeight: ${height} cm\nWeight: ${weight} kg\n\nDo you want to OVERWRITE the old data with this new data?`;
             
-            // Format a clean confirmation prompt for the student
-            const confirmMsg = `⚠️ DATA ALREADY EXISTS! ⚠️\n\n` +
-                               `Student: ${enName} (${lookupKey})\n\n` +
-                               `📁 PREVIOUSLY SAVED DATA:\n` +
-                               `Height: ${existing.height} cm\n` +
-                               `Weight: ${existing.weight} kg\n\n` +
-                               `🆕 YOUR NEW DATA:\n` +
-                               `Height: ${height} cm\n` +
-                               `Weight: ${weight} kg\n\n` +
-                               `Do you want to OVERWRITE the old data with this new data? (Click OK to Replace, Cancel to keep old data)`;
-            
-            if (!confirm(confirmMsg)) {
-                // Student clicked Cancel. Abort the save process.
-                return;
-            }
-            
-            // If they clicked OK, remove the old record so we can replace it
+            if (!confirm(confirmMsg)) return;
             studentsDatabase.splice(existingRecordIndex, 1);
         }
 
-        // Create the new record
         const newRecord = { 
-            lookupKey,
-            formGrade: "F." + formGrade, 
-            studentClass, 
-            classNumber, 
-            enName, 
-            chName, 
-            height, 
-            weight 
+            lookupKey, formGrade: "F." + formGrade, studentClass, classNumber, enName, chName, height, weight 
         };
         
         studentsDatabase.push(newRecord);
         localStorage.setItem('savedMeasurements', JSON.stringify(studentsDatabase));
         updateRecordCount();
 
-        // Clear only height/weight and number inputs to make next entry fast
         document.getElementById('height').value = '';
         document.getElementById('weight').value = '';
         const numberRadios = document.querySelectorAll('input[name="classNumber"]');
@@ -427,7 +411,6 @@
         
         lookupStudent(); 
         
-        // Success Animation on Button
         const btn = document.querySelector('.btn-submit');
         const originalText = btn.innerHTML;
         btn.innerHTML = "💾 Saved Successfully!";
@@ -442,7 +425,7 @@
 
     function exportToExcel() {
         if (Object.keys(schoolNamesDatabase).length === 0) {
-            alert("⚠️ Please upload the Student Excel List first so we can generate the full class roster!");
+            alert("⚠️ Please wait for the student list to fetch from the server.");
             return;
         }
 
@@ -464,14 +447,8 @@
             const record = enteredDataMap[key];
             
             fullData.push({
-                formNum: parseInt(fNum),
-                formStr: "F." + fNum,
-                classStr: sClass,
-                classNum: cNum,
-                enName: studentInfo.en,
-                chName: studentInfo.ch,
-                height: record ? record.height : "", 
-                weight: record ? record.weight : ""  
+                formNum: parseInt(fNum), formStr: "F." + fNum, classStr: sClass, classNum: cNum,
+                enName: studentInfo.en, chName: studentInfo.ch, height: record ? record.height : "", weight: record ? record.weight : ""  
             });
         }
 
@@ -481,6 +458,8 @@
             return a.classNum - b.classNum;
         });
 
+        const activeTerm = document.getElementById('termSelector').options[document.getElementById('termSelector').selectedIndex].text;
+        
         let csvContent = "Form,Class,Class Number,English Name,Chinese Name,Height (cm),Weight (kg)\n";
         fullData.forEach(row => {
             csvContent += `${row.formStr},${row.classStr},${row.classNum},${row.enName},${row.chName},${row.height},${row.weight}\n`;
@@ -490,22 +469,16 @@
         const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "PE_Full_Class_List_Data.csv";
+        link.download = `PE_${activeTerm.replace(/\s+/g, '_')}_Data.csv`;
         link.click();
     }
 
     function clearAllData() {
-        if (confirm("⚠️ This will completely clear the memory of names and saved measurements. Proceed?")) {
+        if (confirm("⚠️ This will completely clear ALL saved physical measurements from this iPad. Proceed?")) {
             studentsDatabase = [];
-            schoolNamesDatabase = {};
             localStorage.removeItem('savedMeasurements');
-            localStorage.removeItem('schoolNamesDatabase');
             updateRecordCount();
-            document.getElementById('dbStatus').innerText = "❌ No Data Loaded";
-            document.getElementById('excelUpload').value = ''; 
-            handleFormClassChange(); // Reset grid back to 40
-            lookupStudent();
-            alert("Memory successfully cleared! You can now upload your Excel file freshly.");
+            alert("Memory successfully cleared! You can start a fresh data entry session.");
         }
     }
 </script>
