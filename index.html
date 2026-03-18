@@ -106,7 +106,8 @@
         button { font-family: 'Inter', sans-serif; border: none; padding: 16px 24px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
         .btn-submit { background-color: var(--success); color: white; width: 100%; font-size: 18px; padding: 20px; border-radius: 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
         .btn-submit:hover { background-color: #059669; transform: translateY(-2px); }
-        .btn-export { background-color: var(--primary); color: white; }
+        .btn-export { background-color: #10B981; color: white; border: 2px solid #059669;}
+        .btn-export:hover { background-color: #059669; }
         .btn-clear { background-color: transparent; color: var(--danger); border: 2px solid var(--danger); }
         
         #recordCount { background: #D1FAE5; color: #065F46; padding: 4px 12px; border-radius: 12px; font-size: 15px; margin-left: 6px; }
@@ -127,15 +128,15 @@
             
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button type="button" class="btn-clear" onclick="clearAllData()">🗑️ Clear Memory</button>
-                <button type="button" class="btn-export" onclick="exportToExcel()">📥 Export CSV</button>
+                <button type="button" class="btn-export" onclick="exportToExcel()">📗 Export as Excel (.xlsx)</button>
             </div>
         </div>
         
         <div class="db-upload" id="uploadSection">
             <label style="margin-bottom: 0;"><strong>Active Database:</strong></label>
             <select id="termSelector" class="term-selector" onchange="triggerDatabaseFetch()">
-                <option value="term1.csv">1st Term Class List</option>
-                <option value="term2.csv">2nd Term Class List</option>
+                <option value="term1.xlsx">1st Term Class List</option>
+                <option value="term2.xlsx">2nd Term Class List</option>
             </select>
             <button type="button" onclick="triggerDatabaseFetch()" style="padding: 8px 12px; font-size: 14px; background: white; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">🔄 Refresh List</button>
         </div>
@@ -220,19 +221,16 @@
     window.onload = function() {
         renderNumberGrid(40); 
         updateRecordCount();
-        
-        // Auto-fetch data from Github on load!
-        triggerDatabaseFetch();
+        triggerDatabaseFetch(); // Auto-fetch on load
     };
 
-    // 🌐 Automatically fetch the database from GitHub
+    // 🌐 Automatically fetch the XLSX database from GitHub
     async function triggerDatabaseFetch() {
         const fileName = document.getElementById('termSelector').value;
         document.getElementById('dbStatus').innerText = `⏳ Fetching ${fileName}...`;
         document.getElementById('dbStatus').style.color = "var(--warning)";
 
         try {
-            // Append a timestamp to prevent the iPad/browser from caching an old version
             const cacheBuster = '?t=' + new Date().getTime();
             const response = await fetch('./' + fileName + cacheBuster);
             
@@ -259,7 +257,6 @@
             const newDb = {};
             let clsIdx = -1, numIdx = -1, enIdx = -1, chIdx = -1;
 
-            // Dynamically map headers (fixes the 1st Term vs 2nd Term column order issue)
             for (let i = 0; i < rows.length; i++) {
                 const cols = rows[i];
                 if (!cols || cols.length === 0) continue;
@@ -295,7 +292,8 @@
 
         } catch (error) {
             console.error(error);
-            document.getElementById('dbStatus').innerText = "❌ Error parsing CSV file.";
+            document.getElementById('dbStatus').innerText = "❌ Error parsing Excel file.";
+            document.getElementById('dbStatus').style.color = "var(--danger)";
         }
     }
 
@@ -423,6 +421,7 @@
         }, 1000);
     }
 
+    // 📗 NATIVE .XLSX EXPORT FUNCTION
     function exportToExcel() {
         if (Object.keys(schoolNamesDatabase).length === 0) {
             alert("⚠️ Please wait for the student list to fetch from the server.");
@@ -434,43 +433,49 @@
             enteredDataMap[record.lookupKey] = record;
         });
 
-        let fullData = [];
+        // Structure the data to match your required columns exactly
+        let excelDataArray = [];
         for (const [key, studentInfo] of Object.entries(schoolNamesDatabase)) {
             const splitIndex = key.indexOf('-');
             if (splitIndex === -1) continue;
             
             const clsName = key.substring(0, splitIndex); 
-            const fNum = clsName.charAt(0); 
+            const fNum = parseInt(clsName.charAt(0)); 
             const sClass = clsName.substring(1); 
             const cNum = parseInt(key.substring(splitIndex + 1), 10);
 
             const record = enteredDataMap[key];
             
-            fullData.push({
-                formNum: parseInt(fNum), formStr: "F." + fNum, classStr: sClass, classNum: cNum,
-                enName: studentInfo.en, chName: studentInfo.ch, height: record ? record.height : "", weight: record ? record.weight : ""  
+            excelDataArray.push({
+                "Form": "F." + fNum,
+                "Class": sClass,
+                "Class Number": cNum,
+                "English Name": studentInfo.en,
+                "Chinese Name": studentInfo.ch,
+                "Height (cm)": record ? Number(record.height) : "", 
+                "Weight (kg)": record ? Number(record.weight) : "",
+                "_formNumRaw": fNum // hidden field for sorting
             });
         }
 
-        fullData.sort((a, b) => {
-            if (a.formNum !== b.formNum) return a.formNum - b.formNum;
-            if (a.classStr !== b.classStr) return a.classStr.localeCompare(b.classStr);
-            return a.classNum - b.classNum;
+        // Sort by Form -> Class -> Number
+        excelDataArray.sort((a, b) => {
+            if (a._formNumRaw !== b._formNumRaw) return a._formNumRaw - b._formNumRaw;
+            if (a.Class !== b.Class) return a.Class.localeCompare(b.Class);
+            return a["Class Number"] - b["Class Number"];
         });
 
+        // Remove the hidden sorting field before exporting
+        excelDataArray.forEach(row => delete row._formNumRaw);
+
+        // Convert the clean array directly into an Excel Sheet
+        const worksheet = XLSX.utils.json_to_sheet(excelDataArray);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "PE Measurements");
+
+        // Download the native .xlsx file
         const activeTerm = document.getElementById('termSelector').options[document.getElementById('termSelector').selectedIndex].text;
-        
-        let csvContent = "Form,Class,Class Number,English Name,Chinese Name,Height (cm),Weight (kg)\n";
-        fullData.forEach(row => {
-            csvContent += `${row.formStr},${row.classStr},${row.classNum},${row.enName},${row.chName},${row.height},${row.weight}\n`;
-        });
-
-        const BOM = "\uFEFF"; 
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `PE_${activeTerm.replace(/\s+/g, '_')}_Data.csv`;
-        link.click();
+        XLSX.writeFile(workbook, `PE_${activeTerm.replace(/\s+/g, '_')}_Data.xlsx`);
     }
 
     function clearAllData() {
