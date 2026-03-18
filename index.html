@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CNECCC PE | Health Data</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -13,6 +13,7 @@
             --primary: #1E3A8A; 
             --primary-light: #3B82F6; 
             --success: #10B981; 
+            --warning: #F59E0B;
             --danger: #EF4444; 
             --bg-page: #F3F4F6; 
             --text-main: #1F2937;
@@ -20,8 +21,16 @@
             --border-color: #E5E7EB;
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-page); margin: 0; padding: 30px 15px; color: var(--text-main); }
-        .container { max-width: 700px; margin: 0 auto; }
+        /* Prevent iPad auto-zoom and adjust for touch */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-page); 
+            margin: 0; 
+            padding: 20px 15px; 
+            color: var(--text-main);
+            -webkit-text-size-adjust: 100%;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
 
         .admin-panel {
             background: #ffffff; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;
@@ -33,11 +42,11 @@
         .admin-panel p { margin: 0; color: var(--text-muted); font-size: 14px; font-weight: 500; }
         
         .db-upload {
-            background: #EFF6FF; padding: 12px; border-radius: 8px; border: 1px dashed var(--primary-light);
-            font-size: 13px; color: var(--primary); display: flex; align-items: center; gap: 10px;
+            background: #EFF6FF; padding: 15px; border-radius: 8px; border: 1px dashed var(--primary-light);
+            font-size: 14px; color: var(--primary); display: flex; align-items: center; gap: 10px;
         }
         
-        .card { background: #FFFFFF; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); padding: 32px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.05); }
+        .card { background: #FFFFFF; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); padding: 24px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.05); }
         
         .header-card { 
             background: linear-gradient(135deg, var(--primary) 0%, #312E81 100%); 
@@ -45,54 +54,55 @@
             border: none; 
             text-align: center; 
         }
-        h1 { font-family: 'Montserrat', sans-serif; font-size: 28px; margin-top: 0; margin-bottom: 8px; font-weight: 700; }
-        .header-card p { color: #E0E7FF; font-size: 15px; line-height: 1.6; margin-bottom: 0; }
+        h1 { font-family: 'Montserrat', sans-serif; font-size: 26px; margin-top: 0; margin-bottom: 8px; font-weight: 700; }
+        .header-card p { color: #E0E7FF; font-size: 16px; line-height: 1.6; margin-bottom: 0; }
 
         .form-group { margin-bottom: 8px; }
-        label { display: block; font-weight: 600; font-size: 16px; margin-bottom: 16px; color: var(--text-main); }
+        label { display: block; font-weight: 600; font-size: 17px; margin-bottom: 16px; color: var(--text-main); }
         .required { color: var(--danger); margin-left: 4px; }
 
         /* ID Card */
         .id-card { background: linear-gradient(to right, #F0FDF4, #FFFFFF); border: 2px solid var(--success); padding: 24px; display: flex; align-items: center; transition: all 0.3s ease; }
         .id-card.empty { background: linear-gradient(to right, #F3F4F6, #FFFFFF); border: 2px dashed #D1D5DB; }
         .id-card .avatar { font-size: 45px; margin-right: 20px; }
-        .id-card .status-label { color: var(--success); font-size: 12px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; letter-spacing: 1px;}
+        .id-card .status-label { color: var(--success); font-size: 13px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; letter-spacing: 1px;}
         .id-card.empty .status-label { color: var(--text-muted); }
         .id-card h3 { color: #064E3B; font-size: 22px; margin: 0; font-family: 'Montserrat', sans-serif; }
         .id-card.empty h3 { color: var(--text-muted); font-size: 18px; font-weight: 500; }
 
         .input-wrapper { position: relative; }
-        .input-wrapper::after { content: attr(data-unit); position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 500; }
+        .input-wrapper::after { content: attr(data-unit); position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600; font-size: 16px; }
         
+        /* Larger inputs for iPad touch */
         input[type="number"] { 
-            width: 100%; padding: 14px 45px 14px 16px; border: 2px solid var(--border-color); 
-            border-radius: 10px; font-size: 16px; font-weight: 500; font-family: inherit; 
+            width: 100%; padding: 18px 50px 18px 20px; border: 2px solid var(--border-color); 
+            border-radius: 12px; font-size: 18px; font-weight: 500; font-family: inherit; 
             box-sizing: border-box; background-color: #F9FAFB; color: var(--primary); 
         }
         input[type="number"]:invalid:not(:placeholder-shown) { border-color: var(--danger); background-color: #FEF2F2; }
         input[type="number"]:focus { outline: none; border-color: var(--primary-light); background-color: #fff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
 
-        .radio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 12px; }
-        .radio-label { display: flex; align-items: center; cursor: pointer; padding: 12px; border: 2px solid var(--border-color); border-radius: 10px; font-weight: 500; transition: all 0.2s; }
+        /* Larger touch targets for radios */
+        .radio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; }
+        .radio-label { display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 16px; border: 2px solid var(--border-color); border-radius: 12px; font-weight: 600; font-size: 18px; transition: all 0.2s; background: #fff;}
         .radio-label:hover { border-color: var(--primary-light); background: #EFF6FF; }
-        .radio-label input { margin-right: 10px; width: 18px; height: 18px; accent-color: var(--primary); }
-        .radio-label:has(input:checked) { border-color: var(--primary); background-color: #EFF6FF; color: var(--primary); }
+        .radio-label input { display: none; } /* Hide default radio for cleaner look */
+        .radio-label:has(input:checked) { border-color: var(--primary); background-color: var(--primary); color: white; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);}
 
-        .number-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 10px; }
+        /* Larger class numbers for iPad */
+        .number-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 12px; }
         .number-grid input[type="radio"] { display: none; }
-        .number-box { display: flex; align-items: center; justify-content: center; height: 48px; background-color: #FFFFFF; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.15s ease-in-out; }
+        .number-box { display: flex; align-items: center; justify-content: center; height: 55px; background-color: #FFFFFF; border: 2px solid var(--border-color); border-radius: 12px; font-size: 18px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.15s ease-in-out; }
         .number-grid input[type="radio"]:hover:not(:checked) + .number-box { border-color: var(--primary-light); color: var(--primary-light); transform: translateY(-2px); }
         .number-grid input[type="radio"]:checked + .number-box { background-color: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3); transform: scale(1.05); }
 
-        button { font-family: 'Inter', sans-serif; border: none; padding: 12px 24px; font-size: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        .btn-submit { background-color: var(--success); color: white; width: 100%; font-size: 16px; padding: 16px; border-radius: 12px; }
-        .btn-submit:hover { background-color: #059669; }
+        button { font-family: 'Inter', sans-serif; border: none; padding: 16px 24px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .btn-submit { background-color: var(--success); color: white; width: 100%; font-size: 18px; padding: 20px; border-radius: 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        .btn-submit:hover { background-color: #059669; transform: translateY(-2px); }
         .btn-export { background-color: var(--primary); color: white; }
-        .btn-export:hover { background-color: #1E40AF; }
-        .btn-clear { background-color: transparent; color: var(--danger); border: 1px solid var(--border-color); }
-        .btn-clear:hover { background-color: #FEF2F2; border-color: #F87171; }
+        .btn-clear { background-color: transparent; color: var(--danger); border: 2px solid var(--danger); }
         
-        #recordCount { background: #D1FAE5; color: #065F46; padding: 2px 10px; border-radius: 12px; font-size: 14px; margin-left: 6px; }
+        #recordCount { background: #D1FAE5; color: #065F46; padding: 4px 12px; border-radius: 12px; font-size: 15px; margin-left: 6px; }
         #dbStatus { font-weight: 700; color: var(--primary-light); }
         .footer-card { background: transparent; box-shadow: none; padding: 0; border: none; }
     </style>
@@ -108,15 +118,15 @@
                 <p style="margin-top: 5px;">Records entered: <span id="recordCount">0</span></p>
             </div>
             
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button type="button" class="btn-clear" onclick="clearAllData()">🗑️ Clear Memory</button>
-                <button type="button" class="btn-export" onclick="exportToExcel()">📥 Export Full CSV List</button>
+                <button type="button" class="btn-export" onclick="exportToExcel()">📥 Export CSV</button>
             </div>
         </div>
         
         <div class="db-upload" id="uploadSection">
-            <label for="excelUpload"><strong>Upload Student List (.xlsx or .csv):</strong></label>
-            <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" onchange="loadExcelDatabase(event)">
+            <label for="excelUpload" style="margin-bottom: 0;"><strong>Upload Excel List:</strong></label>
+            <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" onchange="loadExcelDatabase(event)" style="font-size: 16px;">
         </div>
     </div>
 
@@ -130,12 +140,12 @@
             <div class="form-group">
                 <label>Form <span class="required">*</span></label>
                 <div class="radio-grid">
-                    <label class="radio-label"><input type="radio" name="formGrade" value="1" onclick="lookupStudent()" required> F.1</label>
-                    <label class="radio-label"><input type="radio" name="formGrade" value="2" onclick="lookupStudent()"> F.2</label>
-                    <label class="radio-label"><input type="radio" name="formGrade" value="3" onclick="lookupStudent()"> F.3</label>
-                    <label class="radio-label"><input type="radio" name="formGrade" value="4" onclick="lookupStudent()"> F.4</label>
-                    <label class="radio-label"><input type="radio" name="formGrade" value="5" onclick="lookupStudent()"> F.5</label>
-                    <label class="radio-label"><input type="radio" name="formGrade" value="6" onclick="lookupStudent()"> F.6</label>
+                    <label class="radio-label"><input type="radio" name="formGrade" value="1" onchange="handleFormClassChange()" required> F.1</label>
+                    <label class="radio-label"><input type="radio" name="formGrade" value="2" onchange="handleFormClassChange()"> F.2</label>
+                    <label class="radio-label"><input type="radio" name="formGrade" value="3" onchange="handleFormClassChange()"> F.3</label>
+                    <label class="radio-label"><input type="radio" name="formGrade" value="4" onchange="handleFormClassChange()"> F.4</label>
+                    <label class="radio-label"><input type="radio" name="formGrade" value="5" onchange="handleFormClassChange()"> F.5</label>
+                    <label class="radio-label"><input type="radio" name="formGrade" value="6" onchange="handleFormClassChange()"> F.6</label>
                 </div>
             </div>
         </div>
@@ -144,17 +154,17 @@
             <div class="form-group">
                 <label>Class Section <span class="required">*</span></label>
                 <div class="radio-grid">
-                    <label class="radio-label"><input type="radio" name="studentClass" value="A" onclick="lookupStudent()" required>  A</label>
-                    <label class="radio-label"><input type="radio" name="studentClass" value="B" onclick="lookupStudent()">  B</label>
-                    <label class="radio-label"><input type="radio" name="studentClass" value="C" onclick="lookupStudent()"> C</label>
-                    <label class="radio-label"><input type="radio" name="studentClass" value="D" onclick="lookupStudent()"> D</label>
+                    <label class="radio-label"><input type="radio" name="studentClass" value="A" onchange="handleFormClassChange()" required> A</label>
+                    <label class="radio-label"><input type="radio" name="studentClass" value="B" onchange="handleFormClassChange()"> B</label>
+                    <label class="radio-label"><input type="radio" name="studentClass" value="C" onchange="handleFormClassChange()"> C</label>
+                    <label class="radio-label"><input type="radio" name="studentClass" value="D" onchange="handleFormClassChange()"> D</label>
                 </div>
             </div>
         </div>
 
         <div class="card">
             <div class="form-group">
-                <label>Student Class Number <span class="required">*</span></label>
+                <label>Student Class Number <span class="required">*</span> <span id="dynamicCountText" style="font-weight: 400; font-size: 14px; color: var(--text-muted);"></span></label>
                 <div class="number-grid" id="classNumberGrid">
                     </div>
             </div>
@@ -173,7 +183,7 @@
                 <div class="form-group">
                     <label for="height">Height (cm) <span class="required">*</span></label>
                     <div class="input-wrapper" data-unit="cm">
-                        <input type="number" id="height" name="height" step="0.1" min="120" max="220" placeholder="e.g. 165.5" required>
+                        <input type="number" id="height" name="height" step="0.1" min="120" max="220" placeholder="e.g. 165.5" inputmode="decimal" required>
                     </div>
                 </div>
             </div>
@@ -181,14 +191,14 @@
                 <div class="form-group">
                     <label for="weight">Weight (kg) <span class="required">*</span></label>
                     <div class="input-wrapper" data-unit="kg">
-                        <input type="number" id="weight" name="weight" step="0.1" min="20" max="150" placeholder="e.g. 55.2" required>
+                        <input type="number" id="weight" name="weight" step="0.1" min="20" max="150" placeholder="e.g. 55.2" inputmode="decimal" required>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="footer-card">
-            <button type="submit" class="btn-submit">✅ Save Measurement & Next Student</button>
+            <button type="submit" class="btn-submit">✅ Save Measurement & Next</button>
         </div>
     </form>
 </div>
@@ -198,11 +208,7 @@
     let schoolNamesDatabase = JSON.parse(localStorage.getItem('schoolNamesDatabase')) || {};
 
     window.onload = function() {
-        const grid = document.getElementById('classNumberGrid');
-        for (let i = 1; i <= 40; i++) {
-            grid.innerHTML += `<label><input type="radio" name="classNumber" value="${i}" onclick="lookupStudent()" required><div class="number-box">${i}</div></label>`;
-        }
-        
+        renderNumberGrid(40); // Default to 40 until a class is picked
         updateRecordCount();
 
         if (Object.keys(schoolNamesDatabase).length > 0) {
@@ -265,10 +271,10 @@
                 schoolNamesDatabase = newDb;
                 localStorage.setItem('schoolNamesDatabase', JSON.stringify(newDb));
                 
-                alert("Success! " + Object.keys(newDb).length + " student names loaded directly from Excel.");
+                alert("Success! " + Object.keys(newDb).length + " student names loaded.");
                 document.getElementById('dbStatus').innerText = "✅ Active (" + Object.keys(newDb).length + " students)";
                 document.getElementById('excelUpload').value = ''; 
-                lookupStudent();
+                handleFormClassChange(); // Refresh grid based on new data
 
             } catch (error) {
                 alert("Error reading Excel file. Please try again.");
@@ -276,6 +282,49 @@
             }
         };
         reader.readAsArrayBuffer(file);
+    }
+
+    // New Function to dynamically render the exact amount of numbers for a class
+    function handleFormClassChange() {
+        const formObj = document.querySelector('input[name="formGrade"]:checked');
+        const classObj = document.querySelector('input[name="studentClass"]:checked');
+        
+        let maxStudents = 40; // Default fallback
+
+        // If Excel data exists and a specific class is selected, find the highest class number
+        if (formObj && classObj && Object.keys(schoolNamesDatabase).length > 0) {
+            const prefix = formObj.value + classObj.value + "-";
+            maxStudents = 0;
+            
+            for (const key in schoolNamesDatabase) {
+                if (key.startsWith(prefix)) {
+                    const num = parseInt(key.split('-')[1]);
+                    if (num > maxStudents) maxStudents = num;
+                }
+            }
+            
+            // If the class is missing in Excel, revert to 40
+            if (maxStudents === 0) maxStudents = 40;
+        }
+
+        renderNumberGrid(maxStudents);
+        lookupStudent(); // Update the profile card in case numbers cleared
+    }
+
+    function renderNumberGrid(maxCount) {
+        const grid = document.getElementById('classNumberGrid');
+        const countText = document.getElementById('dynamicCountText');
+        
+        // Preserve currently selected number if it's within the new bounds
+        const currentSelected = document.querySelector('input[name="classNumber"]:checked')?.value;
+        
+        grid.innerHTML = '';
+        countText.innerText = `(Rendering 1 to ${maxCount})`;
+
+        for (let i = 1; i <= maxCount; i++) {
+            let isChecked = (currentSelected == i) ? 'checked' : '';
+            grid.innerHTML += `<label><input type="radio" name="classNumber" value="${i}" onclick="lookupStudent()" required ${isChecked}><div class="number-box">${i}</div></label>`;
+        }
     }
 
     function lookupStudent() {
@@ -325,12 +374,36 @@
 
         const lookupKey = formGrade + studentClass + "-" + classNumber;
         const student = schoolNamesDatabase[lookupKey];
-        const enName = student ? student.en : "";
+        const enName = student ? student.en : "Unknown Student";
         const chName = student ? student.ch : "";
 
-        // Remove any old entry for this student if it exists (so they can be overwritten)
-        studentsDatabase = studentsDatabase.filter(r => r.lookupKey !== lookupKey);
+        // --- DUPLICATE & OVERWRITE CHECK ---
+        const existingRecordIndex = studentsDatabase.findIndex(r => r.lookupKey === lookupKey);
+        
+        if (existingRecordIndex !== -1) {
+            const existing = studentsDatabase[existingRecordIndex];
+            
+            // Format a clean confirmation prompt for the student
+            const confirmMsg = `⚠️ DATA ALREADY EXISTS! ⚠️\n\n` +
+                               `Student: ${enName} (${lookupKey})\n\n` +
+                               `📁 PREVIOUSLY SAVED DATA:\n` +
+                               `Height: ${existing.height} cm\n` +
+                               `Weight: ${existing.weight} kg\n\n` +
+                               `🆕 YOUR NEW DATA:\n` +
+                               `Height: ${height} cm\n` +
+                               `Weight: ${weight} kg\n\n` +
+                               `Do you want to OVERWRITE the old data with this new data? (Click OK to Replace, Cancel to keep old data)`;
+            
+            if (!confirm(confirmMsg)) {
+                // Student clicked Cancel. Abort the save process.
+                return;
+            }
+            
+            // If they clicked OK, remove the old record so we can replace it
+            studentsDatabase.splice(existingRecordIndex, 1);
+        }
 
+        // Create the new record
         const newRecord = { 
             lookupKey,
             formGrade: "F." + formGrade, 
@@ -346,6 +419,7 @@
         localStorage.setItem('savedMeasurements', JSON.stringify(studentsDatabase));
         updateRecordCount();
 
+        // Clear only height/weight and number inputs to make next entry fast
         document.getElementById('height').value = '';
         document.getElementById('weight').value = '';
         const numberRadios = document.querySelectorAll('input[name="classNumber"]');
@@ -353,6 +427,7 @@
         
         lookupStudent(); 
         
+        // Success Animation on Button
         const btn = document.querySelector('.btn-submit');
         const originalText = btn.innerHTML;
         btn.innerHTML = "💾 Saved Successfully!";
@@ -362,35 +437,30 @@
             btn.innerHTML = originalText;
             btn.style.backgroundColor = "";
             document.getElementById('height').focus(); 
-        }, 800);
+        }, 1000);
     }
 
     function exportToExcel() {
-        // If they haven't uploaded an Excel file, we can't build the full list!
         if (Object.keys(schoolNamesDatabase).length === 0) {
             alert("⚠️ Please upload the Student Excel List first so we can generate the full class roster!");
             return;
         }
 
-        // 1. Create a fast map of the data we DID enter
         const enteredDataMap = {};
         studentsDatabase.forEach(record => {
             enteredDataMap[record.lookupKey] = record;
         });
 
-        // 2. Build the FULL list using the uploaded Master Database
         let fullData = [];
         for (const [key, studentInfo] of Object.entries(schoolNamesDatabase)) {
-            // Re-separate the key (e.g., "1A-15" -> Form 1, Class A, Number 15)
             const splitIndex = key.indexOf('-');
             if (splitIndex === -1) continue;
             
             const clsName = key.substring(0, splitIndex); 
-            const fNum = clsName.charAt(0); // "1"
-            const sClass = clsName.substring(1); // "A"
+            const fNum = clsName.charAt(0); 
+            const sClass = clsName.substring(1); 
             const cNum = parseInt(key.substring(splitIndex + 1), 10);
 
-            // Check if we typed data for them. If not, it returns undefined
             const record = enteredDataMap[key];
             
             fullData.push({
@@ -400,25 +470,23 @@
                 classNum: cNum,
                 enName: studentInfo.en,
                 chName: studentInfo.ch,
-                height: record ? record.height : "", // Blank if missing
-                weight: record ? record.weight : ""  // Blank if missing
+                height: record ? record.height : "", 
+                weight: record ? record.weight : ""  
             });
         }
 
-        // 3. Sort perfectly by Form -> Class -> Number
         fullData.sort((a, b) => {
             if (a.formNum !== b.formNum) return a.formNum - b.formNum;
             if (a.classStr !== b.classStr) return a.classStr.localeCompare(b.classStr);
             return a.classNum - b.classNum;
         });
 
-        // 4. Generate the CSV file
         let csvContent = "Form,Class,Class Number,English Name,Chinese Name,Height (cm),Weight (kg)\n";
         fullData.forEach(row => {
             csvContent += `${row.formStr},${row.classStr},${row.classNum},${row.enName},${row.chName},${row.height},${row.weight}\n`;
         });
 
-        const BOM = "\uFEFF"; // Allows Excel to read Chinese characters properly
+        const BOM = "\uFEFF"; 
         const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
@@ -435,6 +503,7 @@
             updateRecordCount();
             document.getElementById('dbStatus').innerText = "❌ No Data Loaded";
             document.getElementById('excelUpload').value = ''; 
+            handleFormClassChange(); // Reset grid back to 40
             lookupStudent();
             alert("Memory successfully cleared! You can now upload your Excel file freshly.");
         }
